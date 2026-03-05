@@ -75,7 +75,7 @@ export const login = async(req,res)=>{
     const refreshToken = jwt.sign({
         userId: user._id
     },ENV.JWT_SECRET,{expiresIn: "3d"});
-    await User.findByIdAndUpdate(user._id,{$set: {refreshToken: refreshToken}});
+    await User.updateOne({_id: user._id},{refreshToken})
     res.cookie("accessToken",accessToken,getCookieOption("access"));
     res.cookie("refreshToken",refreshToken,getCookieOption("refresh"));
 
@@ -86,11 +86,6 @@ export const logout = async(req,res)=>{
         const refreshToken = req.cookies.refreshToken;
         if(refreshToken){
             const user = await User.findOneAndUpdate({refreshToken},{$set: {refreshToken: null}}); 
-            // jwt.verify(refreshToken,ENV.JWT_SECRET,async(err,decoded)=>{
-            //     if(decoded){
-            //         await User.findByIdAndUpdate(decoded.userId,{$set: {refreshToken: null}});
-            //     }
-            // })
             res.clearCookie("refreshToken",);
         }
         if(req.cookies.accessToken){
