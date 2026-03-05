@@ -24,11 +24,11 @@ export const authSchema = z.object({
     .string("Roll Number is missing")
     .min(10, "Invalid Roll Number"),
 
-  course: z
-  .string("Course is missing")
+  branch: z
+  .string("Branch is missing")
   .toLowerCase()
   .refine(val => ["bca", "mca", "bsc", "btech"].includes(val), {
-    message: "Invalid course"
+    message: "Invalid Branch"
   })
 });
 export const loginSchema = authSchema.pick({
