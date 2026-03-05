@@ -8,7 +8,6 @@ router.post("/signup/pass",signupPassport)
 router.post("/signup",signup)
 router.post("/login",login)
 router.post("/logout",logout)
-router.post("/course",verifyUser)
 router.post("/user-fetch",verifyUser,userFetch)
 router.post("/refresh-token",refreshToken)
 
