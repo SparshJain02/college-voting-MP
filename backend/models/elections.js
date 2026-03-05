@@ -4,6 +4,7 @@ const candidateSchema = new mongoose.Schema({
     position: {
         type: String,
         enum: ["president","vicePresident"],
+        required: true,
     },
     applications: {
         type: [{
@@ -14,7 +15,8 @@ const candidateSchema = new mongoose.Schema({
     },
     branch: {
         type: String,
-        enum: ["bca","mca","btech","bsc","bba","bcom"]
+        enum: ["bca","mca","btech","bsc","bba","bcom"],
+        required: true,
     }
 })
 
