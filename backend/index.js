@@ -5,6 +5,7 @@ import cors from "cors"
 import passport from "./config/passport.js";
 import session from "express-session";
 import userRouter from "./routes/user.js";
+import candidateRouter from "./routes/vote.js";
 import cookieParser from "cookie-parser";
 
 
@@ -29,6 +30,12 @@ app.use(cors(({
     methods: ["POST,GET,DELETE,PATCH"]
 })))
 
+/**
+ * Connects to the MongoDB database and starts the HTTP server.
+ *
+ * Attempts to connect to MongoDB using ENV.MONGO_URL and, after a successful connection, starts the Express server listening on ENV.PORT.
+ * Any errors encountered while connecting to the database or starting the server are caught and logged.
+ */
 async function connectDbAndServer(){
     try{
 
@@ -50,3 +57,4 @@ async function connectDbAndServer(){
 connectDbAndServer();
 
 app.use("/auth",userRouter)
+app.use("/vote",candidateRouter)
