@@ -21,7 +21,7 @@ const userSchema = new Schema({
         unique: true,
         minLength: 10,
     },
-    course: {
+    branch: {
         type: String,
         enum: ["bca","mca","btech","bsc"],
         required: true

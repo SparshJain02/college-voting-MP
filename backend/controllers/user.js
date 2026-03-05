@@ -20,31 +20,37 @@ export const signupPassport = async(req,res) => {
     return res.json({message: "user data saved successfully",status: true})
 }
 export const signup = async(req,res)=>{
-    const result = authSchema.safeParse(req.body);
-    if (!result.success) {
-        const errors = result.error.issues.reduce((acc, obj) => {
-            acc[obj.path.join(".")] = obj.message;
-            return acc;
-        }, {});
-        return res.status(400).json({ message: errors});
+    try{
+
+        const result = authSchema.safeParse(req.body);
+        if (!result.success) {
+            const errors = result.error.issues.reduce((acc, obj) => {
+                acc[obj.path] = obj.message;
+                return acc;
+            }, {});
+            return res.status(400).json({ message: errors});
+        }
+        const {email,password,username,rollno,branch} = req.body;
+        const user = await User.findOne({email,rollno});
+        if(user){
+            return res.json({message: "user already exist",status: false})
+        }
+        const hashedPassword = await bcrypt.hash(password,5)
+        const savedUser = await User.insertOne({email,password:hashedPassword,rollno,username,branch})
+        const accessToken = jwt.sign({
+            userId: savedUser._id
+        },ENV.JWT_SECRET,{expiresIn: "15m"});
+        const refreshToken = jwt.sign({
+            userId: savedUser._id
+        },ENV.JWT_SECRET,{expiresIn: "3d"});
+        await User.findByIdAndUpdate(savedUser._id,{$set: {refreshToken: refreshToken}});
+        res.cookie("accessToken",accessToken,getCookieOption("access"));
+        res.cookie("refreshToken",refreshToken,getCookieOption("refresh"));
+        return res.json({message: "user saved successfully!",status: true});
     }
-    const {email,password,username,rollno,course,} = req.body;
-    const user = await User.findOne({email,rollno});
-    if(user){
-        return res.json({message: "user already exist",status: false})
+    catch(err){
+        return res.status(500).json({message: `Error signing in: ${err}`,status: false})
     }
-    const hashedPassword = await bcrypt.hash(password,5)
-    const savedUser = await User.insertOne({email,password:hashedPassword,rollno,username,course})
-    const accessToken = jwt.sign({
-        userId: savedUser._id
-    },ENV.JWT_SECRET,{expiresIn: "15m"});
-    const refreshToken = jwt.sign({
-        userId: savedUser._id
-    },ENV.JWT_SECRET,{expiresIn: "3d"});
-    await User.findByIdAndUpdate(savedUser._id,{$set: {refreshToken: refreshToken}});
-    res.cookie("accessToken",accessToken,getCookieOption("access"));
-    res.cookie("refreshToken",refreshToken,getCookieOption("refresh"));
-    return res.json({message: "user saved successfully!",status: true});
 }
 export const login = async(req,res)=>{
     const result = loginSchema.safeParse(req.body);
