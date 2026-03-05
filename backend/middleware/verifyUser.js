@@ -3,7 +3,7 @@ import { ENV } from "../env.js";
 export const verifyUser = async (req,res,next)=>{
     const token = req.cookies.accessToken;
     if(!token){
-        return res.status(401).json({message: "Please log in first!",status: false})
+        return res.status(401).json({message: "Token Invalid!",status: false})
     }
     jwt.verify(token,ENV.JWT_SECRET,(err,decoded)=>{
         if(err){
