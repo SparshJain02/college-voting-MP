@@ -10,7 +10,7 @@ export const signupPassport = async(req,res) => {
     const {email , password} = req.body;
     const user = await User.findOne({email});
     if(user){
-        return res.status(409).json({message: "user already exist",status: false})
+        return res.status(409).json({message: "user already exist" })
     }
     const hashedPassword = await bcrypt.hash(password,5)
     const newUser = new User({
@@ -33,7 +33,7 @@ export const signup = async(req,res)=>{
         const {email,password,username,rollno,branch} = req.body;
         const user = await User.findOne({email,rollno});
         if(user){
-            return res.status(409).json({message: "user already exist",status: false})
+            return res.status(409).json({message: "user already exist" })
         }
         const hashedPassword = await bcrypt.hash(password,5)
         const savedUser = await User.insertOne({email,password:hashedPassword,rollno,username,branch})
@@ -49,7 +49,7 @@ export const signup = async(req,res)=>{
         return res.status(201).json({message: "user saved successfully!",status: true});
     }
     catch(err){
-        return res.status(500).json({message: `Error signing in: ${err}`,status: false})
+        return res.status(500).json({message: `Error signing in: ${err}` })
     }
 }
 export const login = async(req,res)=>{
@@ -64,7 +64,7 @@ export const login = async(req,res)=>{
     const {email,password,rollno} = req.body;
     const user = await User.findOne({email,rollno});
     if(!user){
-        return res.status(404).json({message: "incorrect credentials",status: false})
+        return res.status(404).json({message: "incorrect credentials" })
     }
     const hashedPassword = user.password;
     bcrypt.compare(password,hashedPassword,(err,result)=>{
@@ -100,7 +100,7 @@ export const logout = async(req,res)=>{
         return res.status(200).json({message: "logout successfull", status: true});
     }
     catch(err){
-        return res.status(500).json({message: "Failed to logout",status: false});
+        return res.status(500).json({message: "Failed to logout" });
     }
 }
 export const refreshToken = async(req,res)=>{
@@ -115,17 +115,17 @@ export const refreshToken = async(req,res)=>{
         if(err){
             if(err.name == "TokenExpiredError"){
                 // then redirect to login 
-                return res.status(401).json({message: "Log in again!",status: false});
+                return res.status(401).json({message: "Log in again!" });
             }
-            return res.status(500).json({message: "refreshToken broked",status: false});
+            return res.status(500).json({message: "refreshToken broked" });
         }
         else if(!decoded){
-            return res.status(401).json({message: "not verified!",status: false});
+            return res.status(401).json({message: "not verified!" });
         }
         const user = await User.findById(decoded.userId);
         if(user.refreshToken !== refreshToken){
             res.clearCookie("refreshToken");
-            return res.status(401).json({message: "Unauthorized",status: false});
+            return res.status(401).json({message: "Unauthorized" });
         }
         // now generate access token
         const payload = decoded.userId;
@@ -133,15 +133,6 @@ export const refreshToken = async(req,res)=>{
          res.cookie("accessToken",accessToken,getCookieOption("access"));
          return res.status(200).json({message: "token send successfully", status: true});
     })
-}
-export const userFetch = async(req,res)=>{
-    // i have to check whether user exist or not 
-    if(!req.UserId){
-        return res.status(401).json({message: "Unauthorized",status: false})
-    }
-    const user = await User.findById(req.UserId);
-    return res.status(200).json({data: user,status: true});
-    
 }
 export const loginPassport = async(req,res,next)=>{
     passport.authenticate('local',(err,user,info)=>{

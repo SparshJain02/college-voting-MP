@@ -57,4 +57,4 @@ async function connectDbAndServer(){
 connectDbAndServer();
 
 app.use("/auth",userRouter)
-app.use("/vote",candidateRouter)
+app.use("/candidate",candidateRouter)
