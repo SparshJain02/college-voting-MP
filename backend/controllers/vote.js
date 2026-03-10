@@ -17,7 +17,10 @@ export const addCandidate = async(req,res)=>{
         const isCandidate = await candidateModel.findOne(
             {position,branch: user.branch}
         )
-        if(!isCandidate){
+        if(isCandidate && isCandidate.position!=position){
+            return res.status(409).json({message: `Candidate registered with different role `})
+        }
+        else if(!isCandidate){
             // then create new document
             await candidateModel.create({position,applications: user._id,branch: user.branch});
         }
