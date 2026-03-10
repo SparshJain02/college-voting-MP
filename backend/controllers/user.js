@@ -10,14 +10,14 @@ export const signupPassport = async(req,res) => {
     const {email , password} = req.body;
     const user = await User.findOne({email});
     if(user){
-        return res.json({message: "user already exist",status: false})
+        return res.status(409).json({message: "user already exist",status: false})
     }
     const hashedPassword = await bcrypt.hash(password,5)
     const newUser = new User({
         email,password: hashedPassword
     })
     await newUser.save();
-    return res.json({message: "user data saved successfully",status: true})
+    return res.status(201).json({message: "user data saved successfully",status: true})
 }
 export const signup = async(req,res)=>{
     try{
@@ -28,12 +28,12 @@ export const signup = async(req,res)=>{
                 acc[obj.path] = obj.message;
                 return acc;
             }, {});
-            return res.status(400).json({ message: errors});
+            return res.status(422).json({error: errors});
         }
         const {email,password,username,rollno,branch} = req.body;
         const user = await User.findOne({email,rollno});
         if(user){
-            return res.json({message: "user already exist",status: false})
+            return res.status(409).json({message: "user already exist",status: false})
         }
         const hashedPassword = await bcrypt.hash(password,5)
         const savedUser = await User.insertOne({email,password:hashedPassword,rollno,username,branch})
@@ -46,7 +46,7 @@ export const signup = async(req,res)=>{
         await User.findByIdAndUpdate(savedUser._id,{$set: {refreshToken: refreshToken}});
         res.cookie("accessToken",accessToken,getCookieOption("access"));
         res.cookie("refreshToken",refreshToken,getCookieOption("refresh"));
-        return res.json({message: "user saved successfully!",status: true});
+        return res.status(201).json({message: "user saved successfully!",status: true});
     }
     catch(err){
         return res.status(500).json({message: `Error signing in: ${err}`,status: false})
@@ -59,12 +59,12 @@ export const login = async(req,res)=>{
             acc[obj.path] = obj.message;
             return acc;
         },{})
-        return res.status(400).json({message: err});
+        return res.status(422).json({error: err});
     }
     const {email,password,rollno} = req.body;
     const user = await User.findOne({email,rollno});
     if(!user){
-        return res.status(401).json({message: "incorrect credentials",status: false})
+        return res.status(404).json({message: "incorrect credentials",status: false})
     }
     const hashedPassword = user.password;
     bcrypt.compare(password,hashedPassword,(err,result)=>{
@@ -72,7 +72,7 @@ export const login = async(req,res)=>{
             return res.status(500).json({message: "login failed! something went wrong", status: false})
         }
         else if(!result){
-            return res.status(403).json({message: "email or password incorrect", status: true})
+            return res.status(401).json({message: "email or password incorrect", status: true})
         }
     })    
      const accessToken = jwt.sign({
@@ -108,7 +108,7 @@ export const refreshToken = async(req,res)=>{
     const refreshToken = req.cookies.refreshToken;
     // there can be a case where there is no refreshToken
     if(!refreshToken){
-        return res.status(401).json({message: "no token provided", status: false});
+        return res.status(404).json({message: "no token provided", status: false});
     }
 
     jwt.verify(refreshToken,ENV.JWT_SECRET,async(err,decoded)=>{
@@ -120,12 +120,12 @@ export const refreshToken = async(req,res)=>{
             return res.status(500).json({message: "refreshToken broked",status: false});
         }
         else if(!decoded){
-            return res.status(400).json({message: "not verified!",status: false});
+            return res.status(401).json({message: "not verified!",status: false});
         }
         const user = await User.findById(decoded.userId);
         if(user.refreshToken !== refreshToken){
             res.clearCookie("refreshToken");
-            return res.status(403).json({message: "Unauthenticated",status: false});
+            return res.status(401).json({message: "Unauthorized",status: false});
         }
         // now generate access token
         const payload = decoded.userId;
@@ -140,7 +140,7 @@ export const userFetch = async(req,res)=>{
         return res.status(401).json({message: "Unauthorized",status: false})
     }
     const user = await User.findById(req.UserId);
-    return res.status(200).json({message: user,status: true});
+    return res.status(200).json({data: user,status: true});
     
 }
 export const loginPassport = async(req,res,next)=>{

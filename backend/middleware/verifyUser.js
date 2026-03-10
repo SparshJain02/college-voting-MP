@@ -7,7 +7,7 @@ export const verifyUser = async (req,res,next)=>{
     }
     jwt.verify(token,ENV.JWT_SECRET,(err,decoded)=>{
         if(err){
-            if(err.name === "TokenExpiredError");{
+            if(err.name === "TokenExpiredError"){
                 return res.status(401).json({message: "Token Expired",status: false})
             }
                 return res.status(500).json({message: "Authentication Error!",status: false})

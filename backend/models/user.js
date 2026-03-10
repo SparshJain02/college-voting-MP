@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
-import { minLength } from "zod";
 
 const userSchema = new Schema({
     username: {
