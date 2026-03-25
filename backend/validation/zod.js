@@ -34,3 +34,6 @@ export const authSchema = z.object({
 export const loginSchema = authSchema.pick({
   email:true,rollno: true,password: true
 })
+export const emailCheck = authSchema.pick({
+  email:true
+})

@@ -1,10 +1,14 @@
 import { User } from "../models/user.js";
 import bcrypt from "bcrypt"
+
 import passport from "passport";
 import jwt from "jsonwebtoken"
 import { ENV } from "../env.js";
-import { authSchema, loginSchema } from "../validation/zod.js";
+import { authSchema, loginSchema,emailCheck } from "../validation/zod.js";
 import { getCookieOption } from "../config/cookieOptions.js";
+import generateOtp from "../config/otp.js";
+import { sendEmail } from "../services/email-send.js";
+import otpModel from "../models/otps.js"
 
 export const signupPassport = async(req,res) => {
     const {email , password} = req.body;
@@ -28,7 +32,7 @@ export const signup = async(req,res)=>{
                 acc[obj.path] = obj.message;
                 return acc;
             }, {});
-            return res.status(422).json({error: errors});
+            return res.status(422).json({error: errors})  ;
         }
         const {email,password,username,rollno,branch} = req.body;
         const user = await User.findOne({email,rollno});
@@ -146,4 +150,49 @@ export const loginPassport = async(req,res,next)=>{
             return res.json({status: true, message: "logged in successfully!"})
         })
     })(req,res,next);
+}
+
+// otps
+export const sendOtp = async(req,res)=>{
+    const {email} = req.body;
+    const result = emailCheck.safeParse(email);
+    if(!result){
+        return res.status(411).json({message: "Invalid Email"});
+    }
+    const otp = generateOtp();
+    const isOtp = await otpModel.findOne({email});
+    if(isOtp){
+        // user is requesting to resend 
+        const expiry = Date.now() - isOtp.createdAt.getTime()
+        if(expiry>=60*1000){
+            await otpModel.updateOne({email},{otp})
+            const data = await sendEmail(email,otp);
+            if(!data){
+                return res.status(500).json({message: "error sending email"});
+            }
+            return res.status(200).json({message: "Email send successfully"});
+        }
+        return res.status(403).json({message: "please try again later"});
+    }
+   const data =  await sendEmail(email,otp);
+   if(!data){
+    return res.status(500).json({message: 'Error sending mail'});
+   }
+   await otpModel.create({email,otp});
+   return res.status(200).json({message: "Email send successfully"});
+}
+export const verifyOtp = async(req,res)=>{
+    const {otp,email} = req.body;
+    const result = emailCheck.safeParse(email);
+    if(!result){
+        return res.status(411).json({message: "Invalid Email"});
+    }
+    const generatedOtp = await otpModel.findOne({email});
+    if(!generatedOtp){
+        return res.status(404).json({message: "otp expired or not created"})
+    }
+    else if(otp!==generatedOtp.otp){
+        return res.status(411).json({message: "incorrect otp"})
+    }
+    return res.status(200).json({message: 'otp verifed'});
 }
