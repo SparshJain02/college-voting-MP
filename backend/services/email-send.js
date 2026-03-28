@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { ENV } from '../env.js';
+import nodemailer from "nodemailer"
 const resend = new Resend(ENV.VOTING_EMAIL_API);
-
 export async function sendEmail(userEmail,subject) {
   const { data, error } = await resend.emails.send({
     from: 'Chitkara Voting <onboarding@resend.dev>',
@@ -15,3 +15,20 @@ export async function sendEmail(userEmail,subject) {
   }
   return data;
 }
+
+async function sendMail(userEmail, otp) {
+    const transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: "codewithsparshjain@gmail.com",
+            pass: ENV.EMAIL_APP_PASSWORD
+        }
+    });
+    transport.sendMail({
+        from: `"Chitkara Voting" <codewithsparshjain@gmail.com>`,
+        to: `${userEmail}`,
+        subject: "OTP",
+        html: `Your OTP is: <strong>${otp}</strong>`
+    })
+}
+export default sendMail;

@@ -26,13 +26,26 @@ export const authSchema = z.object({
 
   branch: z
   .string("Branch is missing")
-  .toLowerCase()
-  .refine(val => ["bca", "mca", "bsc", "btech"].includes(val), {
+  .refine(val => [
+  "Computer Science and Engineering (CSE)",
+  "Electronics and Communication Engineering (ECE)",
+  "Mechanical Engineering (ME)",
+  "Civil Engineering (CE)",
+  "Information Technology (IT)",
+  "Artificial Intelligence and Data Science",
+  "Bachelor of Computer Applications (BCA)",
+  "Bachelor of Business Administration (BBA)",
+  "Architecture (B.Arch)",
+  "Pharmacy (B.Pharm)",
+].includes(val), {
     message: "Invalid Branch"
   })
 });
 export const loginSchema = authSchema.pick({
   email:true,rollno: true,password: true
+})
+export const otpSchema = authSchema.pick({
+  email:true,rollno: true
 })
 export const emailCheck = authSchema.pick({
   email:true

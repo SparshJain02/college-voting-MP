@@ -22,7 +22,18 @@ const userSchema = new Schema({
     },
     branch: {
         type: String,
-        enum: ["bca","mca","btech","bsc"],
+        enum: [
+            "Computer Science and Engineering (CSE)",
+            "Electronics and Communication Engineering (ECE)",
+            "Mechanical Engineering (ME)",
+            "Civil Engineering (CE)",
+            "Information Technology (IT)",
+            "Artificial Intelligence and Data Science",
+            "Bachelor of Computer Applications (BCA)",
+            "Bachelor of Business Administration (BBA)",
+            "Architecture (B.Arch)",
+            "Pharmacy (B.Pharm)",
+        ],
         required: true
     },
     refreshToken: {
@@ -30,4 +41,4 @@ const userSchema = new Schema({
         default: null
     }
 })
-export const User = mongoose.model("User",userSchema);
+export const User = mongoose.model("User", userSchema);
