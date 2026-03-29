@@ -11,6 +11,6 @@ export const getCookieOption = (type) =>{
         return {...base,maxAge:15*60*1000};
     }
     else if(type === "refresh"){
-        return {...base , maxAge: 9*60*60*1000}
+        return {...base , maxAge: 3*24*60*60*1000}
     }
 }

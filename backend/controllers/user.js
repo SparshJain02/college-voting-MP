@@ -49,7 +49,7 @@ export const signup = async (req, res) => {
         await User.findByIdAndUpdate(savedUser._id, { $set: { refreshToken: refreshToken } });
         res.cookie("accessToken", accessToken, getCookieOption("access"));
         res.cookie("refreshToken", refreshToken, getCookieOption("refresh"));
-        return res.status(201).json({ message: "User Saved Successfully!"});
+        return res.status(201).json({message: "Signed In"});
     }
     catch (err) {
         return res.status(500).json({ error: `Error signing In: ${err}` })
@@ -57,16 +57,16 @@ export const signup = async (req, res) => {
 }
 export const login = async (req, res) => { 
     const accessToken = jwt.sign({
-        userId: req.userId,
+        userId: req.User._id,
     }, ENV.JWT_SECRET, { expiresIn: "15m" });
     const refreshToken = jwt.sign({
-        userId: req.userId
+        userId: req.User._id
     }, ENV.JWT_SECRET, { expiresIn: "3d" });
-    await User.updateOne({ _id: req.userId }, { refreshToken })
+    await User.updateOne({ _id: req.User._id }, { refreshToken })
     res.cookie("accessToken", accessToken, getCookieOption("access"));
     res.cookie("refreshToken", refreshToken, getCookieOption("refresh"));
 
-    return res.status(200).json({ message: "Logged in Successfully!"})
+    return res.status(200).json({ message: "User Logged in Successfully"});
 }
 export const logout = async (req, res) => {
     try {
@@ -78,7 +78,7 @@ export const logout = async (req, res) => {
         if (req.cookies.accessToken) {
             res.clearCookie("accessToken");
         }
-        return res.status(200).json({ message: "logout successfull", status: true });
+        return res.status(200).json({ message: "Logout"});
     }
     catch (err) {
         return res.status(500).json({ message: "Failed to logout" });
@@ -89,30 +89,30 @@ export const refreshToken = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     // there can be a case where there is no refreshToken
     if (!refreshToken) {
-        return res.status(404).json({ message: "no token provided", status: false });
+        return res.status(404).json({ error: "Unauthorized"});
     }
 
     jwt.verify(refreshToken, ENV.JWT_SECRET, async (err, decoded) => {
         if (err) {
             if (err.name == "TokenExpiredError") {
                 // then redirect to login 
-                return res.status(401).json({ message: "Log in again!" });
+                return res.status(401).json({ error: "Unauthorized" });
             }
-            return res.status(500).json({ message: "refreshToken broked" });
+            return res.status(500).json({ error: "refreshToken broked" });
         }
         else if (!decoded) {
-            return res.status(401).json({ message: "not verified!" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
         const user = await User.findById(decoded.userId);
         if (user.refreshToken !== refreshToken) {
             res.clearCookie("refreshToken");
-            return res.status(401).json({ message: "Unauthorized" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
         // now generate access token
         const payload = decoded.userId;
         const accessToken = jwt.sign({ userId: payload }, ENV.JWT_SECRET, { expiresIn: "15m" });
         res.cookie("accessToken", accessToken, getCookieOption("access"));
-        return res.status(200).json({ message: "token send successfully", status: true });
+        return res.status(201).json({ message: "Acess Token Generated"});
     })
 }
 export const loginPassport = async (req, res, next) => {
@@ -127,6 +127,19 @@ export const loginPassport = async (req, res, next) => {
             return res.json({ status: true, message: "logged in successfully!" })
         })
     })(req, res, next);
+}
+export const fetchUser = async(req,res)=>{
+    //  i want to fetch the user 
+    const user = await User.findById(req.UserId);
+    if(!user){
+        return res.status(401).json({error: "Unauthorized"});
+    }
+    return res.status(200).json({data: {
+        email: user.email,
+        rollno: user.rollno,
+        username: user.username,
+        branch: user.branch,
+    }})
 }
 
 // otps

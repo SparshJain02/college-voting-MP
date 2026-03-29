@@ -30,14 +30,13 @@ export const credentialVerificationUser = async(req,res,next)=>{
             return res.status(404).json({error: "User doesnot exists"});
         }
         else if(user.rollno!==rollno){
-            console.log(rollno);
             return res.status(401).json({error: "Incorrect Roll Number"});
         }
         const isMatch = await bcrypt.compare(password,user.password);
         if(!isMatch){
             return res.status(401).json({error: "Incorrect Password"});
         }
-        req.userId = user._id;
+        req.User = user;
         next();
     }
     else{
