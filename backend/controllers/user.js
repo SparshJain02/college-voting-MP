@@ -10,6 +10,7 @@ import generateOtp from "../config/otp.js";
 // import { sendEmail } from "../services/email-send.js";
 import otpModel from "../models/otps.js"
 import sendMail from "../services/email-send.js";
+import sendJwtToken from "../services/token-send.js";
 
 export const signupPassport = async (req, res) => {
     const { email, password } = req.body;
@@ -37,18 +38,11 @@ export const signup = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 5)
         const savedUser = await User.insertOne({ email, password: hashedPassword, rollno, username, branch })
-
-        const accessToken = jwt.sign({
-            userId: savedUser._id
-        }, ENV.JWT_SECRET, { expiresIn: "15m" });
-        
-        const refreshToken = jwt.sign({
-            userId: savedUser._id
-        }, ENV.JWT_SECRET, { expiresIn: "3d" });
-
-        await User.findByIdAndUpdate(savedUser._id, { $set: { refreshToken: refreshToken } });
-        res.cookie("accessToken", accessToken, getCookieOption("access"));
-        res.cookie("refreshToken", refreshToken, getCookieOption("refresh"));
+        // creating access and refresh token
+        const token = sendJwtToken(savedUser._id);
+        await User.findByIdAndUpdate(savedUser._id, { $set: { refreshToken: token.refreshToken } });
+        res.cookie("accessToken", token.accessToken, getCookieOption("access"));
+        res.cookie("refreshToken", token.refreshToken, getCookieOption("refresh"));
         return res.status(201).json({message: "Signed In"});
     }
     catch (err) {
@@ -56,15 +50,12 @@ export const signup = async (req, res) => {
     }
 }
 export const login = async (req, res) => { 
-    const accessToken = jwt.sign({
-        userId: req.User._id,
-    }, ENV.JWT_SECRET, { expiresIn: "15m" });
-    const refreshToken = jwt.sign({
-        userId: req.User._id
-    }, ENV.JWT_SECRET, { expiresIn: "3d" });
-    await User.updateOne({ _id: req.User._id }, { refreshToken })
-    res.cookie("accessToken", accessToken, getCookieOption("access"));
-    res.cookie("refreshToken", refreshToken, getCookieOption("refresh"));
+
+    const token = sendJwtToken(req.User._id);
+
+    await User.updateOne({ _id: req.User._id }, { refreshToken:token.refreshToken })
+    res.cookie("accessToken", token.accessToken, getCookieOption("access"));
+    res.cookie("refreshToken", token.refreshToken, getCookieOption("refresh"));
 
     return res.status(200).json({ message: "User Logged in Successfully"});
 }
