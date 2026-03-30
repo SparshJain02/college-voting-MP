@@ -60,3 +60,9 @@ export const otpSchema = authSchema.pick({
 export const emailCheck = authSchema.pick({
   email: true
 })
+export const adminSchema = authSchema.pick({
+  username: true,
+  email: true,
+  password: true,
+  branch: true
+})

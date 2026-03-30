@@ -10,7 +10,8 @@ import generateOtp from "../config/otp.js";
 // import { sendEmail } from "../services/email-send.js";
 import otpModel from "../models/otps.js"
 import sendMail from "../services/email-send.js";
-import sendJwtToken from "../services/token-send.js";
+import sendJwtToken from "../services/create-jwt-token.js";
+import adminModel from "../models/admin.js";
 
 export const signupPassport = async (req, res) => {
     const { email, password } = req.body;
@@ -39,7 +40,7 @@ export const signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 5)
         const savedUser = await User.insertOne({ email, password: hashedPassword, rollno, username, branch })
         // creating access and refresh token
-        const token = sendJwtToken(savedUser._id);
+        const token = sendJwtToken(savedUser._id,"student");
         await User.findByIdAndUpdate(savedUser._id, { $set: { refreshToken: token.refreshToken } });
         res.cookie("accessToken", token.accessToken, getCookieOption("access"));
         res.cookie("refreshToken", token.refreshToken, getCookieOption("refresh"));
@@ -51,7 +52,7 @@ export const signup = async (req, res) => {
 }
 export const login = async (req, res) => { 
 
-    const token = sendJwtToken(req.User._id);
+    const token = sendJwtToken(req.User._id,"student");
 
     await User.updateOne({ _id: req.User._id }, { refreshToken:token.refreshToken })
     res.cookie("accessToken", token.accessToken, getCookieOption("access"));
@@ -80,7 +81,7 @@ export const refreshToken = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     // there can be a case where there is no refreshToken
     if (!refreshToken) {
-        return res.status(404).json({ error: "Unauthorized"});
+        return res.status(404).json({ error: "No Token"});
     }
 
     jwt.verify(refreshToken, ENV.JWT_SECRET, async (err, decoded) => {
@@ -94,14 +95,15 @@ export const refreshToken = async (req, res) => {
         else if (!decoded) {
             return res.status(401).json({ error: "Unauthorized" });
         }
+        // !find here by the role 
         const user = await User.findById(decoded.userId);
-        if (user.refreshToken !== refreshToken) {
+        if (user.refreshToken !== refreshToken) { // it means the refresh token is previous one and user is logged out already 
             res.clearCookie("refreshToken");
             return res.status(401).json({ error: "Unauthorized" });
         }
         // now generate access token
         const payload = decoded.userId;
-        const accessToken = jwt.sign({ userId: payload }, ENV.JWT_SECRET, { expiresIn: "15m" });
+        const accessToken = jwt.sign({ userId: payload,role:decoded.role }, ENV.JWT_SECRET, { expiresIn: "15m" });
         res.cookie("accessToken", accessToken, getCookieOption("access"));
         return res.status(201).json({ message: "Acess Token Generated"});
     })
@@ -121,7 +123,18 @@ export const loginPassport = async (req, res, next) => {
 }
 export const fetchUser = async(req,res)=>{
     //  i want to fetch the user 
-    const user = await User.findById(req.UserId);
+    // user can be anyone first student / admin / superUser
+    let user;
+    const role = req.role;
+    if(role === "student"){
+        user = await User.findById(req.UserId);
+    }
+    else if(role === "admin"){
+        user = await adminModel.findOne({_id: req.UserId,role:"admin"});
+    }
+    else if(role === "super"){
+        user = await adminModel.findOne({_id:req.UserId,role:"super"});
+    }
     if(!user){
         return res.status(401).json({error: "Unauthorized"});
     }
@@ -130,29 +143,17 @@ export const fetchUser = async(req,res)=>{
         rollno: user.rollno,
         username: user.username,
         branch: user.branch,
+        role
     }})
 }
 
 // otps
 export const sendOtp = async (req, res) => {
     const { email } = req.body;
-    // const result = emailCheck.safeParse(email);
-    // if (!result) {
-    //     return res.status(422).json({ error: "Invalid Email" });
-    // }
- 
-    // // *before generating otp let's verify whether we should sent otp or not
-    // const user = await User.findOne({email});
-    // if(type==="signup" && user){
-    //     return res.status(409).json({error: "User Aready Exists"});
-    // }
-    // else if(type ==="login" && (!user)){
-    //     return res.status(404).json({error: "User Doesnot Exists"});
-    // }
-    // else if(!(type==="login" || type==="signup")){
-    //     return res.status(422).json({error: "Invalid Type"});
-    // }
-
+    const result = emailCheck.safeParse(email);
+    if (!result) {
+        return res.status(422).json({ error: "Invalid Email" });
+    }
 
     const otp = generateOtp();
     const isOtp = await otpModel.findOne({ email});

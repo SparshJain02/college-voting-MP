@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken";
 import { ENV } from "../env.js";
-const sendJwtToken = (id) => {
+const sendJwtToken = (id,role) => {
     const accessToken = jwt.sign({
-        userId: id
+        userId: id,role
     }, ENV.JWT_SECRET, { expiresIn: "15m" });
 
     const refreshToken = jwt.sign({
-        userId: id
+        userId: id,role
     }, ENV.JWT_SECRET, { expiresIn: "3d" });
     
     return {

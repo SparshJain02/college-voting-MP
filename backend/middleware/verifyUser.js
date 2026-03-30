@@ -10,13 +10,18 @@ export const verifyUser = async (req,res,next)=>{
             if(err.name === "TokenExpiredError"){
                 return res.status(401).json({error: "Token Expired" })
             }
-                return res.status(500).json({error: "Authentication Error!" })
+            else if(err.name === "JsonWebTokenError"){
+                // it means user has modified the token 
+                return res.status(401).json({error: "Unauthorized" })
+            }
         }
         else if(!decoded){
-            return res.status(403).json({error: "Not Verified" });
+            console.log("if not decoded: ",decoded);
+            return res.status(401).json({error: "Unauthorized" });
         }
         else{
             req.UserId = decoded.userId;
+            req.role = decoded.role;
             next();
         }
     });
