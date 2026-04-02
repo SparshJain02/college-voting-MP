@@ -16,7 +16,6 @@ export const verifyUser = async (req,res,next)=>{
             }
         }
         else if(!decoded){
-            console.log("if not decoded: ",decoded);
             return res.status(401).json({error: "Unauthorized" });
         }
         else{

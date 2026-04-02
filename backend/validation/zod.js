@@ -65,4 +65,7 @@ export const adminSchema = authSchema.pick({
   email: true,
   password: true,
   branch: true
+}).extend({
+  role: z
+  .enum(["admin","super"])
 })

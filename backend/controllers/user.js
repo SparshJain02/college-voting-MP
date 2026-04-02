@@ -9,7 +9,7 @@ import { getCookieOption } from "../config/cookieOptions.js";
 import generateOtp from "../config/otp.js";
 // import { sendEmail } from "../services/email-send.js";
 import otpModel from "../models/otps.js"
-import sendMail from "../services/email-send.js";
+import {sendMail} from "../services/email-send.js";
 import sendJwtToken from "../services/create-jwt-token.js";
 import adminModel from "../models/admin.js";
 
@@ -95,9 +95,18 @@ export const refreshToken = async (req, res) => {
         else if (!decoded) {
             return res.status(401).json({ error: "Unauthorized" });
         }
-        // !find here by the role 
-        const user = await User.findById(decoded.userId);
-        if (user.refreshToken !== refreshToken) { // it means the refresh token is previous one and user is logged out already 
+        const role = decoded.role;
+        let user;
+        if(role === "student"){
+            user = await User.findById(decoded.userId);
+        }
+        else if(role === "admin"){
+            user = await adminModel.findById(decoded.userId);
+        }
+        else if(role === "super"){
+          user = await adminModel.findById(decoded.userId);
+        }
+        if (user && user.refreshToken !== refreshToken) { // it means the refresh token is previous one and user is logged out already 
             res.clearCookie("refreshToken");
             return res.status(401).json({ error: "Unauthorized" });
         }

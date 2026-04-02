@@ -16,7 +16,7 @@ export async function sendEmail(userEmail,subject) {
   return data;
 }
 
-async function sendMail(userEmail, otp) {
+export async function sendMail(userEmail, otp) {
     const transport = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -31,4 +31,20 @@ async function sendMail(userEmail, otp) {
         html: `Your OTP is: <strong>${otp}</strong>`
     })
 }
-export default sendMail;
+export async function sendMailAdmin(adminName,adminEmail,pass,branch){
+    const transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: "codewithsparshjain@gmail.com",
+            pass: ENV.EMAIL_APP_PASSWORD
+        }
+    });
+    transport.sendMail({
+        from: `"Chitkara Voting" <codewithsparshjain@gmail.com>`,
+        to: `${adminEmail}`,
+        subject: "admin",
+        html: `Hey <strong>${adminName}</strong> you are now admin of <strong>${branch}</strong> with password: <strong>${pass}<strong/>`
+    })
+
+}
+// export default sendMail;

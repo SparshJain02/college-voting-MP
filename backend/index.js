@@ -5,6 +5,7 @@ import cors from "cors"
 import passport from "./config/passport.js";
 import session from "express-session";
 import userRouter from "./routes/user.js";
+import adminRouter from "./routes/admin.js";
 import candidateRouter from "./routes/vote.js";
 import cookieParser from "cookie-parser";
 
@@ -57,4 +58,5 @@ async function connectDbAndServer(){
 connectDbAndServer();
 
 app.use("/auth",userRouter)
+app.use("/admin",adminRouter)
 app.use("/candidate",candidateRouter)
