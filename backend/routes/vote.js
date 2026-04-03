@@ -10,4 +10,5 @@ Router.get("/:position",verifyUser,candidateFetch)
 Router.post("/vote",verifyUser,addVoters)
 
 
+
 export default Router;

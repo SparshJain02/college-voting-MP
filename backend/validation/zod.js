@@ -69,3 +69,20 @@ export const adminSchema = authSchema.pick({
   role: z
   .enum(["admin","super"])
 })
+
+export const electionDateSchema = z.object({
+  nominationStart: z.string().datetime(),
+  nominationEnd: z.string().datetime(),
+  votingStart: z.string().datetime(),
+  votingEnd: z.string().datetime(),
+}).refine((data) => {
+  return new Date(data.nominationStart) < new Date(data.nominationEnd);
+}, {
+  message: "Nomination end must be after nomination start",
+  path: ["nominationEnd"],
+}).refine((data) => {
+  return new Date(data.votingStart) < new Date(data.votingEnd);
+}, {
+  message: "Voting end must be after voting start",
+  path: ["votingEnd"],
+});

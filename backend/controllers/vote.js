@@ -1,4 +1,4 @@
-import candidateModel from "../models/elections.js";
+import candidateModel, { electionDateModel } from "../models/elections.js";
 import { User } from "../models/user.js";
 import voterModel from "../models/voter.js";
 

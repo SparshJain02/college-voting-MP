@@ -12,7 +12,6 @@ export const credVerifyAdmin = async(req,res,next)=>{
     }
     // validations done now chech actual user
     const admin = await adminModel.findOne({email});
-    console.log(admin);
     if(!admin){
         return res.status(404).json({error: "Admin not exists"});
     }
