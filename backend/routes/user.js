@@ -10,9 +10,7 @@ router.post("/signup",credentialVerificationUser,signup)
 router.post("/login",credentialVerificationUser,login)
 router.get("/user",verifyUser,fetchUser)
 router.post("/logout",logout)
-router.post("/refresh",refreshToken)
-
-
+router.post("/refresh",refreshToken) // it's universal not related to user only
 // otps
 router.post("/otp",credentialVerificationUser,sendOtp)
 router.post("/otp/verify",verifyOtp)

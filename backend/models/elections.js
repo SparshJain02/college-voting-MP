@@ -33,6 +33,32 @@ const electionDates = new mongoose.Schema({
         type: Date,
         expires:0
     },
+    branch: {
+        type: String,
+        unique: true,
+        enum: [
+            'CSE',
+            'ECE',
+            'EE',
+            'ME',
+            'CE',
+            'MCT',
+            'AE',
+            'BCA',
+            'MCA',
+            'BBA',
+            'MBA',
+            'B.Com',
+            'B.Arch',
+            'B.Des',
+            'B.Pharm',
+            'B.Sc Nursing',
+            'BPT',
+            'B.A. LL.B.',
+            'JMC',
+            'HM',
+        ],
+    },
     admin: {
         type:mongoose.Schema.Types.ObjectId,
         ref: "Admin"

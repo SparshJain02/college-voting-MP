@@ -3,10 +3,11 @@ import generateOtp from "../config/otp.js";
 import adminModel from "../models/admin.js";
 import otpModel from "../models/otps.js";
 import sendJwtToken from "../services/create-jwt-token.js";
-import { sendMail, sendMailAdmin } from "../services/email-send.js";
+import { sendMail, sendMailAdmin, sendRevokeMailAdmin } from "../services/email-send.js";
 import bcrypt from "bcrypt"
 import { electionDateModel } from "../models/elections.js";
 import { electionDateSchema } from "../validation/zod.js";
+import { User } from "../models/user.js";
 export const signup = async (req, res) => {
     const superRole = req.role;
     if (superRole != "super") {
@@ -25,6 +26,10 @@ export const signup = async (req, res) => {
         const admin = await adminModel.findOne({ email });
         if (admin) {
             return res.status(409).json({ error: "Admin already exists!" });
+        }
+        const findByBranch = await adminModel.findOne({branch});
+        if(findByBranch){
+            return res.status(409).json({ error: "Admin with this branch already exists" });
         }
         const hashedPassword = await bcrypt.hash(password, 5);
 
@@ -95,19 +100,21 @@ export const setElectionDates = async (req, res) => {
     if (!result) {
         return res.status(422).json({ error: "Validation Errors" });
     }
-    const { nominationStart, nominationEnd, votingStart, votingEnd } = req.body;
-
-    // * there are things that should be taken care of: 1) admin should not be allowed to upload elections more than once 2) (optional) there should be feature so that admin can update timelines
-    const dates = await electionDateModel.create({
+    const { nominationStart, nominationEnd, votingStart, votingEnd,branch } = req.body;
+    const election = await electionDateModel.findOne({branch});
+    if(election){
+        return res.status(409).json({error: "Elections already created!"});
+    }
+   await electionDateModel.create({
         nominationStart,
         nominationEnd,
         votingStart,
         votingEnd,
-        admin
+        admin,
+        branch
     })
     return res.status(201).json({ message: "Election Created Successfully!" });
 }
-
 export const getAdmins = async (req, res) => {
     // only superadmin can get details of all admins so: 
     const role = req.role;
@@ -146,7 +153,8 @@ export const getAdmins = async (req, res) => {
                         {
                             $and: [
                                 { $ne: ["$elections", null] }, 
-                                { $gte: ["$elections.votingEnd", new Date()] }
+                                { $gte: [new Date(),"$elections.nominationStart"] },
+                                {$lte: [new Date(),"$elections.votingEnd"]}
                             ]
                         },
                         "Active",
@@ -167,12 +175,25 @@ export const getAdmins = async (req, res) => {
     return res.status(200).json({ data: adminData });
 
 }
-export const getElectionStatus = async(req,res)=>{
-    // !pending
-    // i would need election data in home page and in admin page 
+export const sendAdmin = async(req,res)=>{
+    const role = req.role;
+    if(role!="admin"){
+        return res.status(403).json({error: "You are not allowed"});
+    }
+    const adminId = req.UserId;
+    const admin = await adminModel.findById(adminId);
+    // this scenario can exists if admin is on admin page and super admin deletes him
+    if(!admin){
+        return res.status(404).json({error: "Admin not exists or deleted!"});
+    }
+    // if here then send admin data
+    return res.status(200).json({data: {
+        name: admin.username,
+        email: admin.email,
+        branch: admin.branch,
+    }})
 }
 export const deleteAdmin = async(req,res)=>{
-    console.log(req.body);
     try{
         const {email} = req.body;
         const role = req.role;
@@ -190,10 +211,77 @@ export const deleteAdmin = async(req,res)=>{
         await adminModel.deleteOne({email});
         // delete elections also
         await electionDateModel.deleteOne({admin:admin._id});
-        // !send mail notifiying you are not admin anymore
+        // sending mail 
+        sendRevokeMailAdmin(admin.username,admin.email,admin.branch);
         return res.status(200).json({message: "Admin Deleted Successfully!"});
     }
     catch(err){
         return res.status(500).json({error: `admin deletion failed ${err.name}`});
     }
+}
+export const getElectionDates = async(req,res)=>{
+    const userId = req.UserId;
+    const role = req.role;
+    // election data is asked by 2 users (student,admin)
+    let user;
+    if(role === "student"){
+        user = await User.findById(userId);
+    }
+    else if(role === "admin"){
+        user = await adminModel.findById(userId);
+    }
+    else{
+        return res.status(403).json({error: "role mismatch"});
+    }
+    const branch = user.branch;
+    const result = await electionDateModel.findOne({branch});
+    if(!result){
+        return res.status(404).json({error: "Election are not created yet"});
+    }
+    return res.status(200).json({data:{
+        nominationStart: result.nominationStart,
+        nominationEnd: result.nominationEnd,
+        votingStart: result.votingStart,
+        votingEnd: result.votingEnd,
+        branch: result.branch,
+    }})
+}
+export const updateNominations = async(req,res)=>{
+    const role = req.role; 
+    if(role!="admin"){
+        return res.status(403).json({error: "Only admins are allowed"});
+    }
+    const {nominationStart,nominationEnd,branch} = req.body;
+    // TODO: validate here
+    const election = await electionDateModel.findOne({branch});
+    if(!election){
+        return res.status(404).json({error: "Elections expired or doesn't not exists"});
+    }
+    
+    if(nominationEnd>new Date()){
+        // so i am not allowed 
+        return res.status(403).json({error: "Timeline Passed can't update"});
+    }
+    await electionDateModel.updateOne({branch},{nominationStart,nominationEnd});
+    return res.status(200).json({message: "Dates Updated!"});
+
+}
+export const updateVotings = async(req,res)=>{
+    const role = req.role; 
+    if(role!="admin"){
+        return res.status(403).json({error: "Only admins are allowed"});
+    }
+    const {votingStart,votingEnd,branch} = req.body;
+    // TODO: validate here
+    const election = await electionDateModel.findOne({branch});
+    if(!election){
+        return res.status(404).json({error: "Elections expired or doesn't not exists"});
+    }
+    
+    if(votingEnd>new Date()){
+        // so i am not allowed 
+        return res.status(403).json({error: "Timeline Passed can't update"});
+    }
+    await electionDateModel.updateOne({branch},{votingStart,votingEnd});
+    return res.status(200).json({message: "Dates Updated!"});
 }

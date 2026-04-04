@@ -10,7 +10,6 @@ import candidateRouter from "./routes/vote.js";
 import cookieParser from "cookie-parser";
 
 
-// ! remove status code and write like "pending" , "rejected", "unauthorized"
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
@@ -28,7 +27,7 @@ const allowedOrigins = ["http://localhost:5173"]
 app.use(cors(({
     origin: allowedOrigins,
     credentials: true,
-    methods: ["POST,GET,DELETE,PATCH"]
+    methods: ["POST,GET,DELETE,PUT"]
 })))
 
 /**

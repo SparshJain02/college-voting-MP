@@ -75,12 +75,14 @@ export const electionDateSchema = z.object({
   nominationEnd: z.string().datetime(),
   votingStart: z.string().datetime(),
   votingEnd: z.string().datetime(),
-}).refine((data) => {
+})
+.refine((data) => {
   return new Date(data.nominationStart) < new Date(data.nominationEnd);
 }, {
   message: "Nomination end must be after nomination start",
   path: ["nominationEnd"],
-}).refine((data) => {
+})
+.refine((data) => {
   return new Date(data.votingStart) < new Date(data.votingEnd);
 }, {
   message: "Voting end must be after voting start",
