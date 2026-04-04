@@ -9,7 +9,6 @@ import { electionDateModel } from "../models/elections.js";
 import { electionDateSchema } from "../validation/zod.js";
 export const signup = async (req, res) => {
     const superRole = req.role;
-    console.log(superRole);
     if (superRole != "super") {
         return res.status(403).json({ error: "Super admin can create admin" });
     }
@@ -165,11 +164,36 @@ export const getAdmins = async (req, res) => {
             branch: admin.branch
         }
     })
-    console.log(adminData);
     return res.status(200).json({ data: adminData });
 
 }
 export const getElectionStatus = async(req,res)=>{
+    // !pending
     // i would need election data in home page and in admin page 
-
+}
+export const deleteAdmin = async(req,res)=>{
+    console.log(req.body);
+    try{
+        const {email} = req.body;
+        const role = req.role;
+        if(role!="super"){
+            return res.status(403).json({error: "Only super admins are allowed to delete"});
+        }
+        // ! check email validation when testing completes
+        
+        // find whether admins exists or not
+        const admin = await adminModel.findOne({email});
+        if(!admin){
+            return res.status(404).json({error: "Admin not found"});
+        }
+        // now delete
+        await adminModel.deleteOne({email});
+        // delete elections also
+        await electionDateModel.deleteOne({admin:admin._id});
+        // !send mail notifiying you are not admin anymore
+        return res.status(200).json({message: "Admin Deleted Successfully!"});
+    }
+    catch(err){
+        return res.status(500).json({error: `admin deletion failed ${err.name}`});
+    }
 }
