@@ -106,7 +106,17 @@ export const refreshToken = async (req, res) => {
         else if(role === "super"){
           user = await adminModel.findById(decoded.userId);
         }
-        if (user && user.refreshToken !== refreshToken) { // it means the refresh token is previous one and user is logged out already 
+
+        // user dont' exists
+        if(!user){
+            // it could be that token exists
+            res.clearCookie("refreshToken");    
+            res.clearCookie("accessToken");    
+            return res.status(401).json({error: "Unauthorized"});
+        }
+
+        // user exists but logged out
+        if (user && user.refreshToken !== refreshToken) { 
             res.clearCookie("refreshToken");
             return res.status(401).json({ error: "Unauthorized" });
         }

@@ -96,6 +96,12 @@ export const setElectionDates = async (req, res) => {
     if (role !== "admin") {
         return res.status(403).json({ error: "Only admin are allowed to create elections" });
     }
+
+    // i have to check whether admin exists or not because it may happen super admin could delete the admin and token still be decoded
+    const adminDetails = await adminModel.findById(admin);
+    if(!adminDetails){
+        return res.status(401).json({error:"Unauthorized"});
+    }
     const result = electionDateSchema.safeParse(req.body);
     if (!result) {
         return res.status(422).json({ error: "Validation Errors" });
@@ -175,24 +181,6 @@ export const getAdmins = async (req, res) => {
     return res.status(200).json({ data: adminData });
 
 }
-export const sendAdmin = async(req,res)=>{
-    const role = req.role;
-    if(role!="admin"){
-        return res.status(403).json({error: "You are not allowed"});
-    }
-    const adminId = req.UserId;
-    const admin = await adminModel.findById(adminId);
-    // this scenario can exists if admin is on admin page and super admin deletes him
-    if(!admin){
-        return res.status(404).json({error: "Admin not exists or deleted!"});
-    }
-    // if here then send admin data
-    return res.status(200).json({data: {
-        name: admin.username,
-        email: admin.email,
-        branch: admin.branch,
-    }})
-}
 export const deleteAdmin = async(req,res)=>{
     try{
         const {email} = req.body;
@@ -227,11 +215,14 @@ export const getElectionDates = async(req,res)=>{
     if(role === "student"){
         user = await User.findById(userId);
     }
-    else if(role === "admin"){
+    else if(role === "admin" || role === "super"){
         user = await adminModel.findById(userId);
     }
     else{
         return res.status(403).json({error: "role mismatch"});
+    }
+    if(!user){
+        return res.status(401).json({error: "Unauthorized"});
     }
     const branch = user.branch;
     const result = await electionDateModel.findOne({branch});
