@@ -6,4 +6,5 @@ export const ENV = {
     JWT_SECRET:process.env.JWT_SECRET,
     VOTING_EMAIL_API:process.env.VOTING_EMAIL_API,
     EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD,
+    EMAIL_NAME: process.env.EMAIL_NAME,
 }

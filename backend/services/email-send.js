@@ -40,7 +40,7 @@ export async function sendMailAdmin(adminName,adminEmail,pass,branch){
         }
     });
     transport.sendMail({
-        from: `"Chitkara Voting" <codewithsparshjain@gmail.com>`,
+        from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
         to: `${adminEmail}`,
         subject: "admin",
         html: `Hey <strong>${adminName}</strong> you are now admin of <strong>${branch}</strong> branch with password: <strong>${pass}<strong/>`
