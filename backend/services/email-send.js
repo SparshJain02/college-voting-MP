@@ -20,12 +20,12 @@ export async function sendMail(userEmail, otp) {
     const transport = nodemailer.createTransport({
         service: "gmail",
         auth: {
-            user: "codewithsparshjain@gmail.com",
+            user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
         }
     });
     transport.sendMail({
-        from: `"Chitkara Voting" <codewithsparshjain@gmail.com>`,
+        from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
         to: `${userEmail}`,
         subject: "OTP",
         html: `Your OTP is: <strong>${otp}</strong>`
@@ -35,7 +35,7 @@ export async function sendMailAdmin(adminName,adminEmail,pass,branch){
     const transport = nodemailer.createTransport({
         service: "gmail",
         auth: {
-            user: "codewithsparshjain@gmail.com",
+            user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
         }
     });
@@ -51,12 +51,12 @@ export async function sendRevokeMailAdmin(adminName,adminEmail,branch){
     const transport = nodemailer.createTransport({
         service: "gmail",
         auth: {
-            user: "codewithsparshjain@gmail.com",
+            user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
         }
     });
     transport.sendMail({
-        from: `"Chitkara Voting" <codewithsparshjain@gmail.com>`,
+        from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
         to: `${adminEmail}`,
         subject: "admin",
         html: `Hey <strong> ${adminName}</strong> you are no more admin of ${branch} branch`
