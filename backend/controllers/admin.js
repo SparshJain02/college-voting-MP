@@ -195,10 +195,12 @@ export const deleteAdmin = async(req,res)=>{
         if(!admin){
             return res.status(404).json({error: "Admin not found"});
         }
+        console.log(admin);
         // now delete
         await adminModel.deleteOne({email});
         // delete elections also
-        await electionDateModel.deleteOne({admin:admin._id});
+        const electionRes = await electionDateModel.deleteOne({admin:admin._id});
+        console.log(electionRes);
         // sending mail 
         sendRevokeMailAdmin(admin.username,admin.email,admin.branch);
         return res.status(200).json({message: "Admin Deleted Successfully!"});

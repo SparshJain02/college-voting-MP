@@ -1,24 +1,25 @@
 import mongoose from "mongoose";
-
+import { branch as branches } from "../config/branches.js";
 const candidateSchema = new mongoose.Schema({
     position: {
         type: String,
-        enum: ["president","vicePresident"],
+        enum: ["President","Vice President"],
         required: true,
     },
-    applications: {
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }
-        ]
+    candidateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    slogan: {
+        type: String,
     },
     branch: {
         type: String,
-        enum: ["bca","mca","btech","bsc","bba","bcom"],
+        enum: branches,
         required: true,
     }
-})
+},{timestamps: true})
 const electionDates = new mongoose.Schema({
     nominationStart:{
         type: Date,
@@ -36,28 +37,7 @@ const electionDates = new mongoose.Schema({
     branch: {
         type: String,
         unique: true,
-        enum: [
-            'CSE',
-            'ECE',
-            'EE',
-            'ME',
-            'CE',
-            'MCT',
-            'AE',
-            'BCA',
-            'MCA',
-            'BBA',
-            'MBA',
-            'B.Com',
-            'B.Arch',
-            'B.Des',
-            'B.Pharm',
-            'B.Sc Nursing',
-            'BPT',
-            'B.A. LL.B.',
-            'JMC',
-            'HM',
-        ],
+        enum: branches,
     },
     admin: {
         type:mongoose.Schema.Types.ObjectId,

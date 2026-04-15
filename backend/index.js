@@ -8,18 +8,15 @@ import userRouter from "./routes/user.js";
 import adminRouter from "./routes/admin.js";
 import candidateRouter from "./routes/vote.js";
 import cookieParser from "cookie-parser";
-
+import http from "http"
+import { Server } from "socket.io";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
 passport.initialize();
 
-// app.use(session({
-//     secret: ENV.JWT_SECRET,
-//     resave: false,
-//     saveUninitialized: false
-// }))
+const server = http.createServer(app);
 app.use(cookieParser());
 
 const allowedOrigins = ["http://localhost:5173"]
@@ -30,30 +27,40 @@ app.use(cors(({
     methods: ["POST,GET,DELETE,PUT"]
 })))
 
-/**
- * Connects to the MongoDB database and starts the HTTP server.
- *
- * Attempts to connect to MongoDB using ENV.MONGO_URL and, after a successful connection, starts the Express server listening on ENV.PORT.
- * Any errors encountered while connecting to the database or starting the server are caught and logged.
- */
-async function connectDbAndServer(){
-    try{
-
-        mongoose.connect(ENV.MONGO_URL)
-        .then(()=>{
-            console.log("Db connected Successfully!");
-        })
-        .catch(err=>{
-            console.log("Error connecting Db!",err.reason);
-        })
-        app.listen(ENV.PORT,()=>{
-            console.log("Server Started!");
-        })
+const io = new Server(server,{
+    cors: {
+        origin: allowedOrigins,
+        credentials: true,
+        methods: ["POST,GET,DELETE,PUT"] 
     }
-    catch(err){
-        console.log("Error in connecting db & server")
+})
+
+app.set('io',io);
+
+io.on('connection', (socket) => {
+    const branch = socket.handshake.auth.branch;
+    if(branch){
+        socket.join(`${branch}`);
+        console.log(`Socket with ${socket.id} joined ${branch}`);
+    }
+  
+  socket.on('disconnect', () => {
+    console.log('Student disconnected:', socket.id);
+  });
+});
+
+async function connectDbAndServer() {
+    try {
+        await mongoose.connect(ENV.MONGO_URL);
+        console.log("Db connected Successfully!");
+        server.listen(ENV.PORT, () => {
+            console.log(`Server Started on port ${ENV.PORT}!`);
+        });
+    } catch (err) {
+        console.log("Error in connecting db & server:", err.message);
     }
 }
+
 connectDbAndServer();
 
 app.use("/auth",userRouter)
