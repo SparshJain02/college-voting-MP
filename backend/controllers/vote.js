@@ -77,12 +77,12 @@ export const candidateFetch = async(req,res)=>{
     }
     const nominationEnd = new Date(electionDates.nominationEnd);
     const votingEnd = new Date(electionDates.votingEnd);
-    if(!(new Date()<nominationEnd || new Date()>votingEnd)){
+    if((new Date()<nominationEnd || new Date()>votingEnd)){
         return res.status(403).json({error: "Can't get candidates"});
     }
 
     // *candidates fetch logic 
-    let candidates = await candidateModel.find({branch}).populate("candidateId","username rollno email branch");
+    let candidates = await candidateModel.find({branch}).populate("candidateId","username rollno email slogan");
     if(!candidates){
         return res.status(404).json({error: "no candidates yet"});
     }

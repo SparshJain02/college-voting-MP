@@ -18,6 +18,11 @@ const candidateSchema = new mongoose.Schema({
         type: String,
         enum: branches,
         required: true,
+    },
+    status: {
+        type: String,
+        enum: ["Pending","Approved","Rejected"],
+        default: "Pending",
     }
 },{timestamps: true})
 const electionDates = new mongoose.Schema({
