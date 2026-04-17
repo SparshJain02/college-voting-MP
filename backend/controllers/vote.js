@@ -56,6 +56,31 @@ export const addCandidate = async(req,res)=>{
         return res.status(500).json({error: `Error adding candidate: ${err},`});
     }
 }
+export const updateCandidates = async(req,res)=>{
+    // this operation can only be done by admin
+    const role = req.role;
+    if(role!=="admin"){
+        return res.status(403).json({error: "only admin can update"});
+    }
+    // i will recieve a object 
+    const {updatedList} = req.body;
+
+    if(!updatedList && Object.keys(updatedList).length === 0){
+        return res.status(404).json({error: "No data to update"});
+    }
+
+    // this will be object 
+    let bulkWrite = []; 
+    for(const [key,value] of Object.entries(updatedList)){
+        bulkWrite.push({updateOne: {
+            filter: {_id: key},
+            update: {$set: {status: value}}
+        }});
+    }
+    console.log(bulkWrite);
+    const bulkUpdate = await candidateModel.bulkWrite(bulkWrite);
+    return res.status(200).json({message: "Updated Successfully"});
+}
 export const candidateFetch = async(req,res)=>{
     const role = req.role;
     let user;
@@ -69,7 +94,8 @@ export const candidateFetch = async(req,res)=>{
         return res.status(404).json({error: "User not found"});
     }
     const branch = user.branch;
-
+    const {page,limit,status} = req.query;
+    const skip = (page-1)*limit;
     // *elections logic:
     const electionDates = await electionDateModel.findOne({branch});
     if(!electionDates){
@@ -82,11 +108,19 @@ export const candidateFetch = async(req,res)=>{
     }
 
     // *candidates fetch logic 
-    let candidates = await candidateModel.find({branch}).populate("candidateId","username rollno email slogan");
+    let candidates = await candidateModel.find({branch, status}).populate("candidateId","username rollno email slogan").limit(limit).skip(skip);
     if(!candidates){
         return res.status(404).json({error: "no candidates yet"});
     }
-    return res.status(200).json({data: candidates})
+    if(status !== "Pending"){
+        return res.status(200).json({data: candidates});
+    }
+    const totalDocs = await candidateModel.countDocuments({branch});
+    const totalPages = Math.ceil(totalDocs/limit);
+    return res.status(200).json({data: {
+        candidates,
+        totalPages
+    }})
 }
 export const candidateCountFetch = async(req,res)=>{
     const role = req.role; 

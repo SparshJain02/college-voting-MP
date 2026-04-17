@@ -20,6 +20,10 @@ const userSchema = new Schema({
         unique: true,
         minLength: 10,
     },
+    role: {
+        type: String,
+        default: "student",
+    },
     branch: {
         type: String,
         enum: [

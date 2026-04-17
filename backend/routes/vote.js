@@ -1,6 +1,6 @@
 import express from "express"
 import { verifyUser } from "../middleware/verifyUser.js";
-import { addCandidate, addVoters, amICandidate, candidateCountFetch } from "../controllers/vote.js";
+import { addCandidate, addVoters, amICandidate, candidateCountFetch, updateCandidates } from "../controllers/vote.js";
 import { candidateFetch } from "../controllers/vote.js";
 const Router = express.Router();
 
@@ -9,7 +9,9 @@ Router.post("/",verifyUser,addCandidate)
 Router.get("/",verifyUser,candidateFetch)
 Router.get("/check",verifyUser,amICandidate);
 Router.get("/count",verifyUser,candidateCountFetch)
+Router.put("/",verifyUser,updateCandidates)
 Router.post("/vote",verifyUser,addVoters)
+
 
 
 
