@@ -64,7 +64,7 @@ export const updateCandidates = async(req,res)=>{
     }
     // i will recieve a object 
     const {updatedList} = req.body;
-
+    
     if(!updatedList && Object.keys(updatedList).length === 0){
         return res.status(404).json({error: "No data to update"});
     }
@@ -108,7 +108,7 @@ export const candidateFetch = async(req,res)=>{
     }
 
     // *candidates fetch logic 
-    let candidates = await candidateModel.find({branch, status}).populate("candidateId","username rollno email slogan").limit(limit).skip(skip);
+    let candidates = await candidateModel.find({branch, status}).populate("candidateId","username rollno email slogan").limit(limit).skip(skip).sort({createdAt:1});
     if(!candidates){
         return res.status(404).json({error: "no candidates yet"});
     }
