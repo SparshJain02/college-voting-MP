@@ -1,15 +1,16 @@
 import mongoose, { Schema } from "mongoose"
 
 const voterSchema = new Schema({
-    votedFor: {
+    candidateId: {
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "Candidate"
     },
-    whoVoted: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: "User"
-        }]
+    role: {
+        type: String,
+        enum: ["President","Vice President"]
+    },
+    branch: {
+        type: String,
     }
 })
 

@@ -162,6 +162,7 @@ export const fetchUser = async(req,res)=>{
         rollno: user.rollno,
         username: user.username,
         branch: user.branch,
+        hasVoted: user.hasVoted,
         role
     }})
 }

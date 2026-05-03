@@ -50,6 +50,10 @@ const userSchema = new Schema({
         ],
         required: true
     },
+    hasVoted: {
+        type: Boolean,
+        default: false
+    },
     refreshToken: {
         type: String,
         default: null

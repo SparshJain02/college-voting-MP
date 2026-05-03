@@ -6,7 +6,8 @@ import passport from "./config/passport.js";
 import session from "express-session";
 import userRouter from "./routes/user.js";
 import adminRouter from "./routes/admin.js";
-import candidateRouter from "./routes/vote.js";
+import candidateRouter from "./routes/candidate.js";
+import votingRouter from "./routes/vote.js";
 import cookieParser from "cookie-parser";
 import http from "http"
 import { Server } from "socket.io";
@@ -66,3 +67,4 @@ connectDbAndServer();
 app.use("/auth",userRouter)
 app.use("/admin",adminRouter)
 app.use("/candidate",candidateRouter)
+app.use("/vote",votingRouter)

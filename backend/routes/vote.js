@@ -1,18 +1,7 @@
 import express from "express"
+import { submitVote } from "../controllers/vote.js";
 import { verifyUser } from "../middleware/verifyUser.js";
-import { addCandidate, addVoters, amICandidate, candidateCountFetch, updateCandidates } from "../controllers/vote.js";
-import { candidateFetch } from "../controllers/vote.js";
-const Router = express.Router();
+const router = express.Router();
 
-// when user will click on president/vice president then he will be registered as candidate
-Router.post("/",verifyUser,addCandidate)
-Router.get("/",verifyUser,candidateFetch)
-Router.get("/check",verifyUser,amICandidate);
-Router.get("/count",verifyUser,candidateCountFetch)
-Router.put("/",verifyUser,updateCandidates)
-Router.post("/vote",verifyUser,addVoters)
-
-
-
-
-export default Router;
+router.post("/",verifyUser,submitVote)
+export default router
