@@ -73,7 +73,7 @@ export const logout = async (req, res) => {
         return res.status(200).json({ message: "Logout"});
     }
     catch (err) {
-        return res.status(500).json({ message: "Failed to logout" });
+        return res.status(500).json({ error: "Failed to logout" });
     }
 }
 export const refreshToken = async (req, res) => {
@@ -190,6 +190,9 @@ export const sendOtp = async (req, res) => {
         return res.status(409).json({ error: "OTP Already Exists!" });
     }
     sendMail(email, otp);
+    console.log(otp);
+
+
     // const data = await sendEmail(email, otp);
     await otpModel.create({ email, otp });
     return res.status(200).json({ message: "Email send successfully" });
