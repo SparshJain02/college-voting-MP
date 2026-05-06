@@ -5,6 +5,7 @@ const voterSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Candidate"
     },
+    // ! remmove this role as it already exists in candidate 
     role: {
         type: String,
         enum: ["President","Vice President"]

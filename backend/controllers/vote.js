@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import adminModel from "../models/admin.js";
 import candidateModel, { electionDateModel } from "../models/elections.js";
 import { User } from "../models/user.js";
@@ -113,10 +114,10 @@ export const candidateFetch = async (req, res) => {
     // *candidates fetch logic 
     let candidates = [{}];
     if (position === "all") {
-         candidates = await candidateModel.find({ branch, status }).populate("candidateId", "username rollno email slogan").limit(limit).skip(skip).sort({ createdAt: 1 });
+        candidates = await candidateModel.find({ branch, status }).populate("candidateId", "username rollno email slogan").limit(limit).skip(skip).sort({ createdAt: 1 });
     }
     else {
-         candidates = await candidateModel.find({ branch, status, position }).populate("candidateId", "username rollno email slogan").limit(limit).skip(skip).sort({ createdAt: 1 });
+        candidates = await candidateModel.find({ branch, status, position }).populate("candidateId", "username rollno email slogan").limit(limit).skip(skip).sort({ createdAt: 1 });
     }
     if (!candidates) {
         return res.status(404).json({ error: "no candidates yet" });
@@ -196,7 +197,7 @@ export const amICandidate = async (req, res) => {
 
 // }
 
-export const submitVote = async (req,res)=>{
+export const submitVote = async (req, res) => {
     // only vote if election exists
     // only vote if date>=votingStart and date<=votingEnd
     // vote if candidate exists
@@ -205,48 +206,126 @@ export const submitVote = async (req,res)=>{
 
     // checking if voted
     const user = await User.findById(req.UserId);
-    if(user.hasVoted){
-        return res.status(403).json({error: "You cannot vote again!"});
+    if (user.hasVoted) {
+        return res.status(403).json({ error: "You cannot vote again!" });
     }
-    
-    
-    
+
+
+
     // finding candidate
-    const {presidentId,vicePresidentId} = req.body;
+    const { presidentId, vicePresidentId } = req.body;
     const president = await candidateModel.findById(presidentId);
     const vicePresident = await candidateModel.findById(vicePresidentId);
 
-    if(!president || !vicePresident || president.status!="Approved" || vicePresident.status!="Approved"){
-        return res.status(403).json({error: "Candidate not exists or approved"});
+    if (!president || !vicePresident || president.status != "Approved" || vicePresident.status != "Approved") {
+        return res.status(403).json({ error: "Candidate not exists or approved" });
     }
 
-    const branch = president.branch;
+    const branch = user.branch;
 
     // checking elections
-    const elections = await electionDateModel.findOne({branch});
-    if(!elections){
-        return res.status(403).json({error: "Cannot vote without elections"});
+    const elections = await electionDateModel.findOne({ branch });
+    if (!elections) {
+        return res.status(403).json({ error: "Cannot vote without elections" });
     }
     const currDate = new Date();
-    if(!(currDate>=elections.votingStart && currDate<=elections.votingEnd)){
-        return res.status(403).json({error: "You can only vote in election period"});
+    if (!(currDate >= elections.votingStart && currDate <= elections.votingEnd)) {
+        return res.status(403).json({ error: "You can only vote in election period" });
     }
 
     const voterCollection = [
         {
             candidateId: presidentId,
-            role: "President",
             branch
         },
         {
             candidateId: vicePresidentId,
-            role: "Vice President",
             branch
         }
     ];
     const result = await voterModel.insertMany(voterCollection);
-    console.log("vote succesfull",result);
+    console.log("vote succesfull", result);
     user.hasVoted = true;
     await user.save();
-    return res.status(201).json({message: "Vote Successfully"});
+    return res.status(201).json({ message: "Vote Successfully" });
+}
+
+export const getVotedCandidates = async (req, res) => {
+    // this will bet get request 
+    // can only get this details when votings are live 
+    // our structure should be
+    // [{_id,name,email,position,votes}]
+    const { branch } = req.query;
+    if (!branch) {
+        return res.status(404).json({ error: "No branch " });
+    }
+    const electionDates = await electionDateModel.findOne({ branch });
+    if (!electionDates) {
+        return res.status(404).json({ error: "There are no elections" });
+    }
+
+    const result = await voterModel.aggregate([
+        {
+            $match: {
+                branch
+            }
+        },
+        {
+            $group: {
+                _id: '$candidateId',
+                votes: { $sum: 1 }
+            }
+        },
+        {
+            $lookup: {
+                from: 'candidates',
+                localField: "_id", // hold candidate id
+                foreignField: "_id", // candidate id 
+                pipeline: [
+                    {
+                        $project: {
+                            // contains candidate fields 
+                            position: 1,
+                            candidateId: 1 // represents user id (naming convention is bad)
+                        }
+                    },
+                ],
+                as: "candidate"
+                
+            }
+        },
+        {
+            $unwind: "$candidate"
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "candidate.candidateId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1,
+                            email: 1
+                        }
+                    }
+                ],
+                as: "user",
+            }
+        },
+        {
+            $unwind: "$user"
+        },
+        // clean up
+        {
+            $project: {
+                _id: 1, // candidateId
+                position: "$candidate.position",
+                votes: 1,
+                username: "$user.username",
+                email: "$user.email",
+            }
+        }
+    ])
+    return res.status(200).json({data: result});
 }

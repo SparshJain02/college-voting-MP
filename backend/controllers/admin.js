@@ -151,7 +151,7 @@ export const getAdmins = async (req, res) => {
         {
             $unwind: {
                 path: "$elections", // this will remove that array from the newly added election field
-                preserveNullAndEmptyArrays: true, // it will keep the non matched document also like a admin who is created but he have not yet created election dates also so what will happen is aggregate will try to find the current admin id with electiondates.admin but it will be null so the document won't be added in result if we won't add this statement  
+                preserveNullAndEmptyArrays: true, // it will keep the non matched document also like a admin who is created but he had not yet created election dates also so what will happen is aggregate will try to find the current admin id with electiondates.admin but it will be null so the document won't be added in result if we won't add this statement  
             }
         },
         {
@@ -235,6 +235,7 @@ export const getElectionDates = async (req, res) => {
     }
 
     // * if currDate>votingEnd means elections are finished then we have to clear all the data
+    // * it's written here because election data is getting fetched in app.jsx , so when fetching it will check and delete 
     if (new Date() >= result.votingEnd) {
         // now clear all the data
 
