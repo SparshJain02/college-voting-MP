@@ -183,13 +183,13 @@ export const sendOtp = async (req, res) => {
         // expiry in milliseconds
         if (expiry >= 60*1000) {
             await otpModel.updateOne({ email }, { otp,createdAt: new Date() })
-            // sendMail(email, otp);
+            sendMail(email, otp);
             // const data = await sendEmail(email,otp);
             return res.status(200).json({ message: "Email send successfully" });
         }
         return res.status(409).json({ error: "OTP Already Exists!" });
     }
-    // sendMail(email, otp);
+    sendMail(email, otp);
     console.log(otp);
 
 
