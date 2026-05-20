@@ -20,7 +20,7 @@ passport.initialize();
 const server = http.createServer(app);
 app.use(cookieParser());
 
-const allowedOrigins = "http://localhost:5173" || ENV.FRONTEND_URI
+const allowedOrigins = ENV.FRONTEND_URI
 
 app.use(cors(({
     origin: allowedOrigins,
