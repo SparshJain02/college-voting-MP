@@ -47,6 +47,28 @@ export async function sendMailAdmin(adminName,adminEmail,pass,branch){
     })
 
 }
+
+export const sendWinnerMail = (adminName,adminEmail,branch,year,presName,vPresName)=>{
+        const transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: `${ENV.EMAIL_NAME}`,
+            pass: ENV.EMAIL_APP_PASSWORD
+        }
+    });
+        transport.sendMail({
+        from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
+        to: `${adminEmail}`,
+        subject: `Winner of ${branch} branch  `,
+        html: `<strong>${presName}</strong> is elected as President and <strong>${vPresName}</strong> is elected as vice President for year <strong>${year}</strong>`
+    });
+        transport.sendMail({
+        from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
+        to: `${adminEmail}`,
+        subject: `Winner of ${branch} branch  `,
+        html: `<strong>${presName}<strong/> is elected as President and <strong>${vPresName}<strong/> is elected as vice President`
+    })
+}
 export async function sendRevokeMailAdmin(adminName,adminEmail,branch){
     const transport = nodemailer.createTransport({
         service: "gmail",

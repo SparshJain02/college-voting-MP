@@ -44,6 +44,10 @@ const adminSchema = new Schema({
         enum: ["admin","super"],
         default: "admin"
     },
+    hasVoted: {
+        type: Boolean,
+        default: false
+    },
     refreshToken: {
         type: String,
         default: null

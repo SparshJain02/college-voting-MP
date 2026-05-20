@@ -204,9 +204,19 @@ export const submitVote = async (req, res) => {
     // post request
     // only vote if not voted
 
+    // xp , vp , z user vote , cal(xpCount,vpCount) send , frontend it could be possible that xp and yp exists or it can be possible they don't exists , so let's do one thing i have id of both of them i will count the documents and i will find one and the populate it and fetch all the details 
+
     // checking if voted
-    const user = await User.findById(req.UserId);
-    if (user.hasVoted) {
+    const role = req.role;
+
+    let user;
+    if(role === "student"){
+         user = await User.findById(req.UserId);
+    }
+    else{
+        user = await adminModel.findById(req.UserId);
+    }
+    if (user && user.hasVoted) {
         return res.status(403).json({ error: "You cannot vote again!" });
     }
 
@@ -244,9 +254,34 @@ export const submitVote = async (req, res) => {
         }
     ];
     const result = await voterModel.insertMany(voterCollection);
-    console.log("vote succesfull", result);
-    user.hasVoted = true;
-    await user.save();
+        user.hasVoted = true;
+        await user.save();
+
+    const presidentVotesCount = await voterModel.countDocuments({candidateId: presidentId});
+    const vicePresidentVoteCount = await voterModel.countDocuments({candidateId: vicePresidentId});
+    const presidentData = await candidateModel.findById(presidentId).populate("candidateId","username email");
+    const vicePresidentData = await candidateModel.findById(vicePresidentId).populate("candidateId","username email")
+    console.log(presidentData,presidentVotesCount,vicePresidentVoteCount);
+    
+    const io = req.app.get('io');
+    io.to(branch).emit('liveCandidates',[
+        {
+            _id: presidentData._id,
+            votes: presidentVotesCount,
+            username: presidentData.candidateId.username,
+            email: presidentData.candidateId.email,
+            position: "President"
+        },
+        {
+            _id:vicePresidentData._id,
+            votes: vicePresidentVoteCount,
+            username: vicePresident.candidateId.username,
+            email: vicePresident.candidateId.email,
+            position: "Vice President"
+        }
+    ])
+
+
     return res.status(201).json({ message: "Vote Successfully" });
 }
 

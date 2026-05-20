@@ -3,7 +3,7 @@ import generateOtp from "../config/otp.js";
 import adminModel from "../models/admin.js";
 import otpModel from "../models/otps.js";
 import sendJwtToken from "../services/create-jwt-token.js";
-import { sendMail, sendMailAdmin, sendRevokeMailAdmin } from "../services/email-send.js";
+import { sendMail, sendMailAdmin, sendRevokeMailAdmin, sendWinnerMail } from "../services/email-send.js";
 import bcrypt from "bcrypt"
 import candidateModel, { electionDateModel } from "../models/elections.js";
 import { electionDateSchema } from "../validation/zod.js";
@@ -201,8 +201,8 @@ export const deleteAdmin = async (req, res) => {
         // now delete
         await adminModel.deleteOne({ email });
         // delete elections also
-        const electionRes = await electionDateModel.deleteOne({ admin: admin._id });
-        console.log(electionRes);
+        // const electionRes = await electionDateModel.deleteOne({ admin: admin._id });
+        // console.log(electionRes);
         // sending mail 
         sendRevokeMailAdmin(admin.username, admin.email, admin.branch);
         return res.status(200).json({ message: "Admin Deleted Successfully!" });
@@ -242,31 +242,75 @@ export const getElectionDates = async (req, res) => {
         // if any one of the changes failed it can crash the app , so session will rollback all the changes if any one fails 
         // it makes consistency 
 
-        const session = await mongoose.startSession()
-        session.startTransaction()
 
         try {
-            await electionDateModel.deleteOne({ branch }).session(session)
+            // !Todo save the data of winners in a new collection 
+            const winnerData = await voterModel.aggregate([
+                {
+                    $match: {
+                        branch
+                    },
+                },
+                {
+                    $group: {
+                        _id: {
+                            id: "$candidateId",
+                            role: "$role",
+                        },
+                        totalVotes: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: {
+                        "_id.role": 1,
+                        totalVotes: -1
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id.role",
+                        winnerCandidate: { $first: "$_id.id" },
+                        votes: { $first: "$totalVotes" }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "candidates",
+                        localField: "winnerCandidate",
+                        foreignField: "_id",
+                        as: "candidate"
+                    }
+                }
+            ])
+            console.log("winner data: ", winnerData);
+                const winnerPrimeName = winnerData[0].candidate[0].username;
+                const winnerVPresName = winnerData[1].candidate[1].username;
+            // sending mail to admin of winners list 
+                // ! mail is not getting send "candidate" error
+            if(role==="admin"){
+                sendWinnerMail(user.username,user.email,branch,result.votingStart.getFullYear(),winnerPrimeName,winnerVPresName);
+            }
+            // fetch admin 
+            const admin = await adminModel.findOne({branch});
+            sendWinnerMail(admin.username,admin.email,branch,result.votingStart.getFullYear(),winnerPrimeName,winnerVPresName);
+            await electionDateModel.deleteOne({ branch })
 
-            await candidateModel.deleteMany({ branch }).session(session)
-
+            await candidateModel.deleteMany({ branch })
             await User.updateMany(
                 { branch, hasVoted: true },
                 { $set: { hasVoted: false } }
-            ).session(session)
+            )
+            await adminModel.updateOne({ branch }, { hasVoted: false });
 
-            await voterModel.deleteMany({ branch }).session(session)
-
-            await session.commitTransaction()
-            session.endSession()
+            await voterModel.deleteMany({ branch })
 
         } catch (error) {
-            await session.abortTransaction()
-            session.endSession()
-            return res.status(500).json({error: "Error deleting data"});
+            return res.status(500).json({ error: "Error deleting data" });
         }
 
-        // !Todo save the data of winners in a new collection 
+
+
+
 
         return res.status(422).json({ error: "Elections are ended" });
     }

@@ -7,4 +7,5 @@ export const ENV = {
     VOTING_EMAIL_API:process.env.VOTING_EMAIL_API,
     EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD,
     EMAIL_NAME: process.env.EMAIL_NAME,
+    FRONTEND_URI: process.env.FRONTEND_URI
 }
