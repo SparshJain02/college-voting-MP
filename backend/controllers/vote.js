@@ -80,7 +80,6 @@ export const updateCandidates = async (req, res) => {
             }
         });
     }
-    console.log(bulkWrite);
     const bulkUpdate = await candidateModel.bulkWrite(bulkWrite);
     return res.status(200).json({ message: "Updated Successfully" });
 }
@@ -261,7 +260,6 @@ export const submitVote = async (req, res) => {
     const vicePresidentVoteCount = await voterModel.countDocuments({candidateId: vicePresidentId});
     const presidentData = await candidateModel.findById(presidentId).populate("candidateId","username email");
     const vicePresidentData = await candidateModel.findById(vicePresidentId).populate("candidateId","username email")
-    console.log(presidentData,presidentVotesCount,vicePresidentVoteCount);
     
     const io = req.app.get('io');
     io.to(branch).emit('liveCandidates',[
