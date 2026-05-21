@@ -18,7 +18,7 @@ export async function sendEmail(userEmail,subject) {
 
 export async function sendMail(userEmail, otp) {
     const transport = nodemailer.createTransport({
-        service: "smtp.gmail.com",
+        service: "gmail",
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
@@ -33,7 +33,7 @@ export async function sendMail(userEmail, otp) {
 }
 export async function sendMailAdmin(adminName,adminEmail,pass,branch){
     const transport = nodemailer.createTransport({
-        service: "smtp.gmail.com",
+        service: "gmail",
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
@@ -50,7 +50,7 @@ export async function sendMailAdmin(adminName,adminEmail,pass,branch){
 
 export const sendWinnerMail = (adminName,adminEmail,branch,year,presName,vPresName)=>{
         const transport = nodemailer.createTransport({
-        service: "smtp.gmail.com",
+        service: "gmail",
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
@@ -71,7 +71,7 @@ export const sendWinnerMail = (adminName,adminEmail,branch,year,presName,vPresNa
 }
 export async function sendRevokeMailAdmin(adminName,adminEmail,branch){
     const transport = nodemailer.createTransport({
-        service: "smtp.gmail.com",
+        service: "gmail",
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
