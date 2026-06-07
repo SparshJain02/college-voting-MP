@@ -24,7 +24,7 @@ export async function sendMail(userEmail, otp) {
             pass: ENV.EMAIL_APP_PASSWORD
         }
     });
-    transport.sendMail({
+    await transport.sendMail({
         from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
         to: `${userEmail}`,
         subject: "OTP",

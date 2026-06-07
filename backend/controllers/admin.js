@@ -40,7 +40,7 @@ export const signup = async (req, res) => {
         })
 
         // sending mail to admin
-        sendMailAdmin(username, email, password, branch);
+        await sendMailAdmin(username, email, password, branch);
 
         return res.status(201).json({
             data: {
@@ -77,7 +77,7 @@ export const sendOtp = async (req, res) => {
             if (expiry > 60 * 1000) { // 60 secs
                 // then 
                 await otpModel.updateOne({ email: admin.email }, { otp, createdAt: new Date() });
-                sendMail(admin.email, otp);
+                await sendMail(admin.email, otp);
                 return res.status(200).json({ message: "Otp Resend Successfully!" });
             }
             // generate new otp 
@@ -85,7 +85,7 @@ export const sendOtp = async (req, res) => {
         }
         // if no otp then create
         currOtp = await otpModel.create({ email: admin.email, otp });
-        sendMail(admin.email, otp);
+        await sendMail(admin.email, otp);
         return res.status(201).json({ message: "OTP send successfully!" });
     }
     catch (err) {
@@ -282,11 +282,11 @@ export const getElectionDates = async (req, res) => {
             // sending mail to admin of winners list 
                 // ! mail is not getting send "candidate" error
             if(role==="admin"){
-                sendWinnerMail(user.username,user.email,branch,result.votingStart.getFullYear(),winnerPrimeName,winnerVPresName);
+                await sendWinnerMail(user.username,user.email,branch,result.votingStart.getFullYear(),winnerPrimeName,winnerVPresName);
             }
             // fetch admin 
             const admin = await adminModel.findOne({branch});
-            sendWinnerMail(admin.username,admin.email,branch,result.votingStart.getFullYear(),winnerPrimeName,winnerVPresName);
+            await sendWinnerMail(admin.username,admin.email,branch,result.votingStart.getFullYear(),winnerPrimeName,winnerVPresName);
             await electionDateModel.deleteOne({ branch })
 
             await candidateModel.deleteMany({ branch })
