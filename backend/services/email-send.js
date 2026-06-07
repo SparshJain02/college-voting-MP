@@ -1,6 +1,9 @@
 import { Resend } from 'resend';
 import { ENV } from '../env.js';
 import nodemailer from "nodemailer"
+import dns from 'node:dns';
+
+dns.setDefaultResultOrder("ipv4first");
 const resend = new Resend(ENV.VOTING_EMAIL_API);
 export async function sendEmail(userEmail,subject) {
   const { data, error } = await resend.emails.send({
