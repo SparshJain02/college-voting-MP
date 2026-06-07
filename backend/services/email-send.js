@@ -24,14 +24,15 @@ export async function sendMail(userEmail, otp) {
         service: "gmail",
         auth: {
             user: `${ENV.EMAIL_NAME}`,
-            pass: ENV.EMAIL_APP_PASSWORD
-        }
+            pass: ENV.EMAIL_APP_PASSWORD,
+        },
+        family: 4,
     });
     await transport.sendMail({
         from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
         to: `${userEmail}`,
         subject: "OTP",
-        html: `Your OTP is: <strong>${otp}</strong>`
+        html: `Your OTP is: <strong>${otp}</strong>`,
     })
 }
 export async function sendMailAdmin(adminName,adminEmail,pass,branch){
@@ -40,7 +41,8 @@ export async function sendMailAdmin(adminName,adminEmail,pass,branch){
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
-        }
+        },
+        family: 4,
     });
     transport.sendMail({
         from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
@@ -57,7 +59,8 @@ export const sendWinnerMail = (adminName,adminEmail,branch,year,presName,vPresNa
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
-        }
+        },
+        family: 4,
     });
         transport.sendMail({
         from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
@@ -78,7 +81,8 @@ export async function sendRevokeMailAdmin(adminName,adminEmail,branch){
         auth: {
             user: `${ENV.EMAIL_NAME}`,
             pass: ENV.EMAIL_APP_PASSWORD
-        }
+        },
+        family: 4,
     });
     transport.sendMail({
         from: `"Chitkara Voting" <${ENV.EMAIL_NAME}>`,
